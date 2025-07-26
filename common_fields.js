@@ -22,11 +22,11 @@ window.commonNormalizedFields = [
     // Common User Fields
     { original: "suser", normalized: "source.user" }, 
     { original: "usrName", normalized: "username" }, 
-    { original: "duser", normalized: "destination.user.name" },
-    { original: "user", normalized: "user.name" },
-    { original: "userName", normalized: "user.name" },
-    { original: "sourceUser", normalized: "source.user.name" },
-    { original: "destinationUser", normalized: "destination.user.name" },
+    { original: "duser", normalized: "destination.username" },
+    { original: "user", normalized: "username" },
+    { original: "userName", normalized: "username" },
+    { original: "sourceUser", normalized: "source.username" },
+    { original: "destinationUser", normalized: "destination.username" },
 
     // Common File Fields
     { original: "fname", normalized: "file.name" }, // CEF style
@@ -47,16 +47,9 @@ window.commonNormalizedFields = [
 
     // Common Time Fields
     { original: "rt", normalized: "event.received" }, // CEF style
-    { original: "devTime", normalized: "event.device_time" }, // LEEF style
+    { original: "devTime", normalized: "event.devicetime" }, // LEEF style
     { original: "end", normalized: "event.end" },
     { original: "start", normalized: "event.start" },
-
-    // Custom String/Number Fields (generic, can be mapped to more specific names)
-    { original: "deviceCustomString1", normalized: "device.custom_string_1" },
-    { original: "deviceCustomString2", normalized: "device.custom_string_2" },
-    { original: "deviceCustomString3", normalized: "device.custom_string_3" },
-    { original: "deviceCustomNumber1", normalized: "device.custom_number_1" },
-    { original: "deviceCustomNumber2", normalized: "device.custom_number_2" },
 
     // Add more common fields as needed
     // Example: { original: "outcome", normalized: "event.outcome" },
