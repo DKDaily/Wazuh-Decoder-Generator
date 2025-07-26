@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wazuh Decoder Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="absolute top-6 right-6 flex items-center gap-4">
+        <label for="themeToggle" id="themeLabel" class="mr-2"></label>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider round"></span>
+        </label>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-6">
+        <h1 class="text-3xl">Wazuh CEF Logs Decoder Generator (Beta)</h1>
+        <h1 class="text-3xl">[Don't Worry We Don't Save Any Of Your Logs &#128519;]</h1>
+        <div class="grid grid-cols-1 md-grid-cols-2 gap-4 mt-6 mb-6">
+            <div>
+                <div class="section-title">Log Source Name:
+                    <span class="tooltip-icon" data-tooltip="Enter a unique name for your log source. This will be used as the name for the parent and child decoders, and also for the downloaded XML filename.">?</span>
+                </div>
+                <input type="text" id="logSource" class="input-box" placeholder="e.g., trendmicro (Parent and Child Decoder Name Generates Based on this name)">
+            </div>
+            <div>
+                <div class="section-title">Log Type:
+                    <span class="tooltip-icon" data-tooltip="Select the format of your input logs. Currently, only CEF and LEEF are supported.">?</span>
+                </div>
+                <select id="logType" class="input-box">
+                    <option value="CEF">CEF</option>
+                    <option value="LEEF">LEEF</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">CEF/LEEF Logs: (Provide More Logs For More Accurate Results)</div>
+            <div class="textarea-container">
+                <textarea id="logs" rows="30" class="textarea"></textarea>
+                <button id="sampleDataBtn" class="btn-primary btn-small sample-data-btn-absolute">Load Sample Logs</button>
+            </div>
+            <div id="logsError" class="error-message mt-1" style="display: none;"></div>
+            <div class="flex justify-end items-center mt-2">
+                <button id="parseLogsBtn" class="btn-primary">Extract Fields</button>
+                <span class="tooltip-icon button-tooltip" data-tooltip="Analyzes the provided logs to extract unique field names and their sample values based on the selected log type.">?</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md-grid-cols-2 gap-4 mt-4">
+            <div>
+                <div class="section-title">Extracted Fields:</div>
+                <div id="fieldList" class="list-box">
+                </div>
+                <div class="mt-2 flex items-center">
+                    <input type="checkbox" id="selectAllCheckbox" class="mr-1">
+                    <label for="selectAllCheckbox" class="whitespace-nowrap">Select All</label>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Selected Fields (Customize Field Names for Correlation & Normalization):</div>
+                <div id="selectedFieldsError" class="error-message mt-1" style="display: none;"></div>
+                <div id="selectedList" class="list-box">
+                    </div>
+
+                <div class="flex justify-center items-center mt-3 relative">
+                    <button id="generateDecoderBtn" class="btn-primary">Generate Decoder</button>
+                    <span class="tooltip-icon button-tooltip" data-tooltip="Creates the Wazuh decoder XML based on your log source name and selected/customized fields.">?</span>
+                    <div id="loadingSpinner" class="loading-spinner absolute" style="display: none;"></div>
+                </div>
+                <div id="generationError" class="error-message mt-1 text-center" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <div class="section-title">Generated Decoder XML:</div>
+            <div class="output-box" id="outputContainer">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <code class="code-content" id="output"></code>
+            </div>
+            <div class="flex justify-end gap-4 mt-2">
+                <button id="downloadXMLBtn" class="btn-primary">Download XML</button>
+                <span class="tooltip-icon button-tooltip" data-tooltip="Downloads the generated decoder XML as a file, named after your log source and current timestamp.">?</span>
+                <button id="copyOutputBtn" class="btn-primary">Copy XML</button>
+                <span class="tooltip-icon button-tooltip" data-tooltip="Copies the generated decoder XML to your clipboard.">?</span>
+            </div>
+            <div id="copySuccessMessage" class="success-message mt-1" style="display: none;">Copied to clipboard!</div>
+        </div>
+    </div>
+
+    <!-- Common Fields (must be loaded first) -->
+    <script src="common_fields.js"></script>
+    <!-- CEF Logic -->
+    <script src="cef_decoder_logic.js"></script>
+    <!-- LEEF Logic -->
+    <script src="leef_decoder_logic.js"></script>
+    <!-- UI Script (must be last to ensure all logic is loaded) -->
+    <script src="ui_script.js"></script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+:root {
+  /* Light Theme - Default */
+  --bg-color: #dcdcdc; /* Darker light gray background */
+  --text-color: #333333; /* Dark text */
+  --primary-color: #ff8c00; /* Dark Orange */
+  --secondary-color: #e8e8e8; /* Slightly darker off-white for elements, less bright */
+  --btn-bg: #ff8c00; /* Dark Orange button background */
+  --btn-text: #ffffff; /* White button text */
+  --border-color: #a0a0a0; /* Darker border for better visibility */
+  --input-border-width: 2px; /* Thicker input border */
+  --error-color: #d32f2f; /* Red for errors */
+  --success-color: #4CAF50; /* Green for success */
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  --bg-color: #1a1a1a; /* Black background */
+  --text-color: #e0e0e0; /* Light text */
+  --primary-color: #cc6600; /* Slightly darker orange for dark theme primary */
+  --secondary-color: #2d2d2d; /* Darker gray for elements */
+  --btn-bg: #cc6600; /* Darker orange button background */
+  --btn-text: #ffffff; /* White button text */
+  --border-color: #444; /* Darker border */
+  --input-border-width: 1px; /* Standard border for dark mode */
+  --error-color: #ff5252; /* Lighter red for dark theme errors */
+  --success-color: #81C784; /* Lighter green for dark theme success */
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+h1 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+textarea,
+input,
+select {
+  background-color: var(--secondary-color);
+  border: var(--input-border-width) solid var(--border-color); /* Use variable for border width */
+  color: var(--text-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-box {
+  height: 36px;
+}
+
+.textarea {
+  resize: vertical;
+  height: 240px;
+}
+
+/* Container for textarea and absolute positioned button */
+.textarea-container {
+    position: relative;
+    width: 100%; /* Ensure it takes full width */
+}
+
+.sample-data-btn-absolute {
+    position: absolute;
+    top: 8px; /* Adjust as needed */
+    right: 8px; /* Adjust as needed */
+    z-index: 2; /* Ensure it's above the textarea */
+}
+
+/* Updated output-box for potential code editor styling */
+.output-box {
+  background-color: var(--secondary-color);
+  border: var(--input-border-width) solid var(--border-color);
+  color: var(--text-color);
+  width: 100%;
+  padding: 0; /* No padding here, handled by inner elements */
+  border-radius: 6px;
+  font-family: monospace;
+  resize: vertical;
+  min-height: 120px;
+  overflow: auto;
+  white-space: pre-wrap; /* Ensures word wrap */
+  word-wrap: break-word; /* Breaks long words if necessary */
+
+  /* Line number styling */
+  display: flex; /* Use flexbox for line numbers and content */
+}
+
+.line-numbers {
+  flex-shrink: 0; /* Prevent line numbers from shrinking */
+  padding: 1rem 0.8rem;
+  text-align: right;
+  border-right: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.1); /* Slightly darker background for numbers */
+  color: #888; /* Dimmer color for numbers */
+  user-select: none; /* Prevent selection of line numbers */
+}
+
+.line-numbers span { /* Each line number on its own line */
+    display: block;
+    line-height: 1.5; /* Match line-height of code content */
+}
+
+.code-content {
+  flex-grow: 1; /* Allow code content to take remaining space */
+  padding: 1rem;
+  line-height: 1.5; /* Match line-height of line numbers */
+}
+
+
+.btn-primary {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  display: inline-flex; /* To align icon and text */
+  align-items: center;
+  gap: 0.5rem; /* Space between text and icon */
+}
+
+.btn-primary:hover {
+  background-color: #e67300; /* Slightly darker orange on hover for light theme */
+}
+
+.btn-small {
+    padding: 0.4rem 0.8rem; /* Smaller padding for smaller buttons */
+    font-size: 0.9rem;
+}
+
+.section-title {
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.field-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.1rem;
+  padding: 0.5rem;
+  background-color: var(--secondary-color);
+  border-radius: 4px;
+  gap: 0.5rem;
+}
+
+.field-item select {
+  flex-grow: 1;
+}
+
+.list-box {
+  border: var(--input-border-width) solid var(--border-color); /* Use variable for border width */
+  padding: 1rem;
+  border-radius: 6px;
+  min-height: 300px; /* Adjusted to show approximately 5 fields */
+  max-height: 300px; /* Set max height for scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  background-color: var(--secondary-color);
+}
+
+.flex {
+  display: flex;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center { /* Added for centering */
+  justify-content: center;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+
+.items-center { /* Added for vertical alignment */
+  align-items: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-1\/2 {
+  width: 50%;
+}
+
+.max-w-7xl {
+  max-width: 1280px;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.top-6 {
+  top: 1.5rem;
+}
+
+.right-6 {
+  right: 1.5rem;
+}
+
+.left-6 { /* Added for left positioning */
+  left: 1.5rem;
+}
+
+#fieldTableContainer {
+  display: none;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: var(--secondary-color);
+}
+
+/* Toggle Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #555;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Theme-specific slider colors */
+[data-theme="light"] .slider {
+  background-color: #ccc;
+}
+
+/* Button styles for remove state */
+.btn-remove {
+  background-color: #f44336 !important;
+  font-size: 0.8rem; /* Adjusted font size for the 'x' symbol */
+  padding: 0.4rem 0.7rem !important; /* Adjusted padding for better appearance */
+}
+
+.btn-remove:hover {
+  background-color: #d32f2f !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .grid-cols-1 > div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .min-w-\[140px\] {
+    min-width: 100%;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.min-w-\[140px\] {
+  min-width: 140px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* --- ADDED FOR GRID LAYOUT --- */
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+/* This media query applies styles for screens 768px and wider */
+@media (min-width: 768px) {
+  .md-grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Tooltip Styles */
+.tooltip-icon {
+    position: relative; /* Changed to relative */
+    display: inline-block;
+    cursor: help;
+    font-size: 0.8em;
+    width: 1em;
+    height: 1em;
+    line-height: 1em;
+    text-align: center;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: var(--btn-text);
+    margin-left: 0.5em;
+    vertical-align: middle; /* Align with text */
+}
+
+/* For tooltips adjacent to buttons, which are already flex items, relative positioning works better for children */
+.button-tooltip {
+    /* No need for position static anymore, it inherits relative from tooltip-icon */
+    margin-left: 0.5rem; /* Space from button */
+}
+
+.tooltip-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%; /* Position above the icon */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #555;
+    color: #fff;
+    padding: 0.5em 0.7em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: nowrap;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.tooltip-icon:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Edit Icon (Pencil) */
+.edit-icon {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    color: var(--primary-color);
+    font-size: 1em; /* Adjust size as needed */
+    flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px; /* Increased size */
+    height: 40px; /* Increased size */
+    animation: spin 1s linear infinite;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin { /* Ensure this block is present and correct */
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Message Styles */
+.error-message {
+    color: var(--error-color);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Success Message Styles */
+.success-message {
+    color: var(--success-color);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: right;
+}
