@@ -134,7 +134,8 @@ function parseLEEFLogs() {
                 hideErrorMessage("selectedFieldsError"); // Clear error when adding a new one
 
                 const li = document.createElement("li");
-                li.className = "p-1 mb-8 border-b border-gray-600 flex items-center justify-between flex-wrap";
+				li.classList.add("field-item"); 
+            //  li.className = "p-1 mb-8 border-b border-gray-600 flex items-center justify-between flex-wrap";
                 li.dataset.key = key;
 
                 const originalNameSpan = document.createElement("span");
