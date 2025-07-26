@@ -14,7 +14,6 @@ toggleButton.addEventListener("change", function() {
 function typeOutDecoder(content) {
   const lineNumbersDiv = document.getElementById("lineNumbers");
   const outputCodeElement = document.getElementById("output");
-  // const outputContainer = document.getElementById("outputContainer"); // No longer needed for page scroll
 
   if (!lineNumbersDiv || !outputCodeElement) {
       console.error("Output elements not found!");
@@ -42,15 +41,14 @@ function typeOutDecoder(content) {
 
       if (currentCharIndex < currentLine.length) {
         outputCodeElement.textContent += currentLine.charAt(currentCharIndex);
-        // Scroll the entire window to the bottom as content is added
-        window.scrollTo(0, document.body.scrollHeight);
+        // Scroll the output box to keep the typing visible
+        outputCodeElement.parentElement.scrollTop = outputCodeElement.parentElement.scrollHeight;
         currentCharIndex++;
         setTimeout(type, speed);
       } else {
         // End of current line
         outputCodeElement.textContent += '\n'; // Add newline for the actual code content
-        // Scroll the entire window to the bottom after adding newline
-        window.scrollTo(0, document.body.scrollHeight);
+        outputCodeElement.parentElement.scrollTop = outputCodeElement.parentElement.scrollHeight;
 
         currentLineIndex++;
         currentCharIndex = 0;
@@ -63,7 +61,7 @@ function typeOutDecoder(content) {
       }
     } else {
         // Ensure it's scrolled to the very bottom once typing is completely finished
-        window.scrollTo(0, document.body.scrollHeight);
+        outputCodeElement.parentElement.scrollTop = outputCodeElement.parentElement.scrollHeight;
     }
   }
   // Initialize first line number
@@ -83,15 +81,22 @@ function copyOutput() {
   const tempTextArea = document.createElement("textarea");
   tempTextArea.value = output.textContent; // Use textContent for code element
   document.body.appendChild(tempTextArea);
-  tempTextArea.select();
+  tempTextArea.select(); // Select the content
   document.execCommand("copy");
   document.body.removeChild(tempTextArea);
 
   const copySuccessMessage = document.getElementById("copySuccessMessage");
   if (copySuccessMessage) {
-    copySuccessMessage.style.display = "block";
+    copySuccessMessage.style.display = "block"; // Make sure it's block for transition
+    requestAnimationFrame(() => { // Trigger reflow for transition
+        copySuccessMessage.classList.add("show");
+    });
+
     setTimeout(() => {
-      copySuccessMessage.style.display = "none";
+      copySuccessMessage.classList.remove("show");
+      setTimeout(() => { // Hide completely after fade out
+          copySuccessMessage.style.display = "none";
+      }, 300); // Match CSS transition duration
     }, 2000); // Hide after 2 seconds
   }
 }
@@ -148,8 +153,23 @@ function fillSampleData() {
 // Function to show/hide loading spinner
 function showLoadingSpinner(show) {
     const spinner = document.getElementById("loadingSpinner");
-    if (spinner) {
-        spinner.style.display = show ? "block" : "none";
+    const overlay = document.getElementById("loadingOverlay");
+    if (spinner && overlay) {
+        if (show) {
+            spinner.style.display = "block";
+            overlay.style.display = "block";
+            // Trigger opacity transition after display is set to block
+            requestAnimationFrame(() => {
+                overlay.style.opacity = 1;
+            });
+        } else {
+            overlay.style.opacity = 0;
+            // Hide after transition
+            setTimeout(() => {
+                spinner.style.display = "none";
+                overlay.style.display = "none";
+            }, 300); // Match CSS transition duration
+        }
     }
 }
 
@@ -158,7 +178,7 @@ function displayErrorMessage(elementId, message) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
         errorElement.textContent = message;
-        errorElement.style.display = "block";
+        errorElement.classList.add("show");
     }
 }
 
@@ -166,8 +186,10 @@ function displayErrorMessage(elementId, message) {
 function hideErrorMessage(elementId) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
-        errorElement.style.display = "none";
-        errorElement.textContent = "";
+        errorElement.classList.remove("show");
+        setTimeout(() => {
+            errorElement.textContent = "";
+        }, 300); // Clear content after transition
     }
 }
 
@@ -332,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         showLoadingSpinner(true);
-        // Add a small delay to ensure spinner is visible, then generate
+        // Defer the generation to allow the spinner to render
         setTimeout(() => {
             if (selectedLogType === "CEF" && typeof generateCEFDecoder === 'function') {
                 generateCEFDecoder();
@@ -342,8 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error("No generation function available for selected log type:", selectedLogType);
                 displayErrorMessage("generationError", "Unsupported log type or generation function not loaded.");
             }
-            showLoadingSpinner(false);
-        }, 1500); // Increased duration to 1.5 seconds
+            showLoadingSpinner(false); // Hide spinner after generation is complete
+        }, 10); // A small delay (e.g., 10ms) to allow UI to update
     });
   }
 
@@ -363,3 +385,13 @@ document.addEventListener('DOMContentLoaded', function() {
     sampleDataBtn.addEventListener("click", fillSampleData);
   }
 });
+
+// MODIFIED: Added ensureFieldItemClass function
+// This function ensures that the 'field-item' class is applied to the list item
+// when rendering selected fields. This should be called by your renderSelectedFields
+// function in cef_decoder_logic.js and leef_decoder_logic.js
+function ensureFieldItemClass(listItem) {
+    if (listItem && !listItem.classList.contains('field-item')) {
+        listItem.classList.add('field-item');
+    }
+}
