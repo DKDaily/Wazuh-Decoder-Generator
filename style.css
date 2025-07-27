@@ -139,6 +139,7 @@ select:focus {
 
   /* Line number styling */
   display: flex; /* Use flexbox for line numbers and content */
+  /* position: relative; Removed from here */
 }
 [data-theme="dark"] .output-box {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -216,7 +217,12 @@ select:focus {
     margin-bottom: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative; /* Added for spinner positioning */
 }
+/* Ensure flexbox properties are applied to specific section-header-box when needed */
+/* Removed .flex-col and .items-center from here, moved to inline in HTML */
+
+
 [data-theme="dark"] .section-header-box {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
@@ -266,6 +272,7 @@ select:focus {
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative; /* Added for spinner positioning */
 }
 
 [data-theme="dark"] .fields-container-box {
@@ -417,6 +424,10 @@ th {
 
 input:checked + .slider {
   background-color: var(--primary-color); /* Use primary color when checked */
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px); /* Moves the circle to the right when checked */
 }
 
 /* Theme-specific slider colors */
@@ -588,7 +599,7 @@ input[type="checkbox"]:checked::after {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    z-index: 10; /* Ensure spinner is above overlay */
+    z-index: 10;
 }
 
 @keyframes spin {
@@ -631,26 +642,24 @@ input[type="checkbox"]:checked::after {
 
 /* Success Message Styles */
 .success-message {
-    color: var(--success-color);
+    color: var(--primary-color); /* Changed to primary-color */
     font-size: 0.9rem;
-    margin-top: 0.5rem;
-    text-align: center; /* Center text within the message itself */
+    /* Removed margin-top and margin-bottom as flex gap will handle spacing */
+    text-align: center;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
-    position: absolute; /* Changed to absolute for precise positioning */
-    bottom: 100%; /* Position above the button group */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for perfect centering */
-    padding: 0.25rem 0.75rem; /* Add some padding */
-    background-color: var(--secondary-color); /* Background for the pop-up */
-    border: 1px solid var(--success-color); /* Border matching success color */
+    padding: 0.25rem 0.75rem;
+    background-color: var(--soft-gray); /* Changed to soft-gray */
+    border: 1px solid var(--primary-color); /* Changed to primary-color */
     border-radius: 4px;
-    white-space: nowrap; /* Keep it on one line */
-    z-index: 20; /* Ensure it's on top */
+    z-index: 20;
+    flex-grow: 1; /* Allow it to take available space */
+    margin-left: auto; /* Push it to center between other flex items */
+    margin-right: auto; /* Push it to center between other flex items */
 }
 .success-message.show {
     opacity: 1;
-    display: block; /* Ensure it's displayed when 'show' class is present */
+    display: block;
 }
 
 /* Field item animations (requires JS to add/remove classes) */
