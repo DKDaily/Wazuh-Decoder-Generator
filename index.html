@@ -27,7 +27,7 @@
                             <span class="tooltip-icon" data-tooltip="Enter a unique name for your log source. This will be used as the name for the parent and child decoders, and also for the downloaded XML filename.">?</span>
                         </div>
                     </div>
-                    <input type="text" id="logSource" class="input-box" placeholder="e.g., trendmicro (Parent and Child Decoder Name Generates Based on this name)">
+                    <input type="text" id="logSource" class="input-box" placeholder="e.g., trendmicro (No Spaces Allowed)">
                 </div>
                 <div>
                     <div class="section-header-box">
@@ -50,64 +50,75 @@
                     <textarea id="logs" rows="30" class="textarea"></textarea>
                     <button id="sampleDataBtn" class="btn-primary btn-small sample-data-btn-absolute">Load Sample Logs</button>
                 </div>
-                <div id="logsError" class="error-message mt-1" style="display: none;"></div>
+                <div id="logsError" class="error-message mt-1"></div>
                 <div class="flex justify-center items-center mt-2">
                     <button id="parseLogsBtn" class="btn-primary">Extract Fields</button>
                     <span class="tooltip-icon button-tooltip" data-tooltip="Analyzes the provided logs to extract unique field names and their sample values based on the selected log type.">?</span>
                 </div>
             </div>
         </div>
-        <div class="fields-container-box mt-4">
-            <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
+
+        <div class="fields-container-box mt-4 relative"> <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
                 <div class="flex flex-col">
                     <div class="section-header-box">
                         <div class="section-title">Extracted Fields:</div>
                     </div>
-                    <div id="fieldList" class="list-box flex-grow">
-                    </div>
+                    <div id="fieldList" class="list-box flex-grow"></div>
                 </div>
 
                 <div>
                     <div class="section-header-box">
                         <div class="section-title">Selected Fields (Customize Field Names for Correlation & Normalization):</div>
                     </div>
-                    <div id="selectedFieldsError" class="error-message mt-1" style="display: none;"></div>
-                    <div id="selectedList" class="list-box">
-                    </div>
+                    <div id="selectedFieldsError" class="error-message mt-1"></div>
+                    <div id="selectedList" class="list-box"></div>
                 </div>
-            </div> <div class="flex justify-between items-center mt-4">
+            </div>
+            <div id="sectionSpinner" class="loading-spinner" style="display: none;"></div> 
+            
+            <div class="flex justify-between items-center mt-4">
                 <div class="flex items-center">
                     <input type="checkbox" id="selectAllCheckbox" class="mr-1">
                     <label for="selectAllCheckbox" class="whitespace-nowrap">Select All</label>
                 </div>
-
-                <div class="flex flex-col items-end"> <div class="relative flex items-center"> <button id="generateDecoderBtn" class="btn-primary">Generate Decoder</button>
+                <div class="flex flex-col items-end">
+                    <div class="relative flex items-center">
+                        <button id="generateDecoderBtn" class="btn-primary">Generate Decoder</button>
                         <span class="tooltip-icon button-tooltip" data-tooltip="Creates the Wazuh decoder XML based on your log source name and selected/customized fields.">?</span>
-                        <div id="loadingSpinner" class="loading-spinner absolute" style="display: none;"></div>
                     </div>
-                    <div id="generationError" class="error-message mt-1 text-right" style="display: none;"></div>
+                    <div id="generationError" class="error-message mt-1 text-right"></div>
                 </div>
             </div>
         </div>
+
         <div class="fields-container-box mt-6">
-            <div class="section-header-box">
-                <div class="section-title">Generated Decoder XML:</div>
+            <div class="section-header-box flex items-center justify-between">
+                <div class="section-title">Generated Decoder in XML:</div>
+                <div id="copySuccessMessage" class="success-message">Decoder Copied To Clipboard!</div> <!-- Removed style="display: none;" -->
+                <div class="flex items-center">
+                    <label for="disableTypingEffectToggle" class="mr-2 whitespace-nowrap">Disable Typing Effect</label>
+                    <label class="switch">
+                        <input type="checkbox" id="disableTypingEffectToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
             <div class="output-box" id="outputContainer">
                 <div class="line-numbers" id="lineNumbers"></div>
                 <code class="code-content" id="output"></code>
             </div>
-            <div class="flex justify-end gap-4 mt-2 relative"> <button id="downloadXMLBtn" class="btn-primary">Download XML</button>
+            <div class="flex justify-end gap-4 mt-2 relative">
+                <button id="downloadXMLBtn" class="btn-primary">Download XML</button>
                 <span class="tooltip-icon button-tooltip" data-tooltip="Downloads the generated decoder XML as a file, named after your log source and current timestamp.">?</span>
                 <button id="copyOutputBtn" class="btn-primary">Copy XML</button>
                 <span class="tooltip-icon button-tooltip" data-tooltip="Copies the generated decoder XML to your clipboard.">?</span>
-                <div id="copySuccessMessage" class="success-message absolute" style="display: none;">Copied to clipboard!</div>
             </div>
         </div>
-        </div>
+    </div>
     <div id="loadingOverlay" class="loading-overlay"></div>
 
     <script src="common_fields.js"></script>
+    <script src="sample_logs.js"></script>
     <script src="cef_decoder_logic.js"></script>
     <script src="leef_decoder_logic.js"></script>
     <script src="ui_script.js"></script>
