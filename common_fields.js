@@ -20,13 +20,13 @@ window.commonNormalizedFields = [
     { original: "app", normalized: "application.name" },
 
     // Common User Fields
-    { original: "suser", normalized: "source.user" }, 
-    { original: "usrName", normalized: "username" }, 
-    { original: "duser", normalized: "destination.username" },
+    { original: "suser", normalized: "source.user" },
+    { original: "usrName", normalized: "username" },
+    { original: "duser", normalized: "destination.user.name" },
     { original: "user", normalized: "username" },
     { original: "userName", normalized: "username" },
-    { original: "sourceUser", normalized: "source.username" },
-    { original: "destinationUser", normalized: "destination.username" },
+    { original: "sourceUser", normalized: "source.user.name" },
+    { original: "destinationUser", normalized: "destination.user.name" },
 
     // Common File Fields
     { original: "fname", normalized: "file.name" }, // CEF style
@@ -47,11 +47,8 @@ window.commonNormalizedFields = [
 
     // Common Time Fields
     { original: "rt", normalized: "event.received" }, // CEF style
-    { original: "devTime", normalized: "event.devicetime" }, // LEEF style
+    { original: "devTime", normalized: "event.device_time" }, // LEEF style
     { original: "end", normalized: "event.end" },
     { original: "start", normalized: "event.start" },
-
-    // Add more common fields as needed
-    // Example: { original: "outcome", normalized: "event.outcome" },
-    // Example: { original: "reason", normalized: "event.reason" },
+	{ original: "smac", normalized: "source.macaddress" },
 ];
