@@ -133,7 +133,7 @@ select:focus {
 
 .textarea {
   resize: vertical;
-  height: 240px;
+  height: 350px;
 }
 
 .textarea-container {
@@ -605,3 +605,4 @@ input[type="checkbox"]:checked::after {
     background-color: #0d1b2a; /* A solid, dark blue from your theme */
     color: #e5e7eb; /* The light text color from your theme */
 }
+
