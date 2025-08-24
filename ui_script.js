@@ -2,9 +2,10 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- STATE MANAGEMENT ---
-    let globalFieldMap = new Map(); // Holds all fields extracted from the current logs.
-    let customFieldMap = new Map(); // Holds the user's selected fields and their custom names.
-    let typingEffectEnabled = true; // New state for typing effect
+    let globalFieldMap = new Map();
+    let customFieldMap = new Map();
+    let typingEffectEnabled = true;
+    let isAdvancedMode = false;
 
     // --- ELEMENT REFERENCES ---
     const elements = {
@@ -14,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
         logTypeSelect: document.getElementById("logType"),
         logsTextarea: document.getElementById("logs"),
         parseLogsBtn: document.getElementById("parseLogsBtn"),
-        generateDecoderBtn: document.getElementById("generateDecoderBtn"),
         copyOutputBtn: document.getElementById("copyOutputBtn"),
         downloadXMLBtn: document.getElementById("downloadXMLBtn"),
         sampleDataBtn: document.getElementById("sampleDataBtn"),
@@ -25,16 +25,21 @@ document.addEventListener('DOMContentLoaded', function() {
         outputCode: document.getElementById("output"),
         lineNumbersDiv: document.getElementById("lineNumbers"),
         loadingOverlay: document.getElementById("loadingOverlay"),
-        copySuccessMessage: document.getElementById("copySuccessMessage"),
         logsError: document.getElementById("logsError"),
         selectedFieldsError: document.getElementById("selectedFieldsError"),
         generationError: document.getElementById("generationError"),
         disableTypingEffectToggle: document.getElementById("disableTypingEffectToggle"),
         sectionSpinner: document.getElementById("sectionSpinner"),
-        // Added reference to the parent container of the output box for scrolling
-        outputSectionContainer: document.querySelector('.fields-container-box.mt-6:last-of-type'), // This targets the last .fields-container-box which is your output section
-        // New reference for the Extracted/Selected Fields section
-        fieldSelectionContainer: document.querySelector('.fields-container-box.mt-4')
+        outputSectionContainer: document.querySelector('.fields-container-box.mt-6:last-of-type'),
+        fieldSelectionContainer: document.querySelector('.fields-container-box.mt-4'),
+        clearAllBtn: document.getElementById("clearAllBtn"),
+        generateDecoderBtn: document.getElementById("generateDecoderBtn"),
+        decoderTypeToggle: document.getElementById("decoderTypeToggle"),
+        decoderTypeDropdown: document.getElementById("decoderTypeDropdown"),
+        generateAdvancedBtn: document.getElementById("generateAdvancedBtn"),
+        generateBasicBtn: document.getElementById("generateBasicBtn"),
+        customPrematchInput: document.getElementById("customPrematchInput"),
+        customPrematchContainer: document.getElementById("customPrematchContainer")
     };
 
     // --- UI HELPER FUNCTIONS ---
@@ -70,8 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const typeOutDecoder = (content) => {
         elements.lineNumbersDiv.innerHTML = '';
         elements.outputCode.textContent = '';
-        // Removed scroll into view from here as it's now handled before spinner
-
+        
         if (!typingEffectEnabled) {
             const lines = content.split('\n');
             lines.forEach((line, index) => {
@@ -79,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 elements.lineNumbersDiv.innerHTML += `<span>${index + 1}</span>`;
             });
             elements.outputContainer.scrollTop = elements.outputContainer.scrollHeight;
+            elements.outputSectionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
             return;
         }
 
@@ -92,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (charIndex < currentLine.length) {
                     elements.outputCode.textContent += currentLine.charAt(charIndex++);
                     elements.outputContainer.scrollTop = elements.outputContainer.scrollHeight;
+                    elements.outputSectionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
                     setTimeout(type, speed);
                 } else {
                     elements.outputCode.textContent += '\n';
@@ -99,10 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     lineIndex++;
                     charIndex = 0;
                     if(lineIndex < lines.length) elements.lineNumbersDiv.innerHTML += `<span>${lineIndex + 1}</span>`;
+                    elements.outputSectionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
                     setTimeout(type, speed);
                 }
             } else {
                  elements.outputContainer.scrollTop = elements.outputContainer.scrollHeight;
+                 elements.outputSectionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
         };
         if (lines.length > 0) elements.lineNumbersDiv.innerHTML = `<span>1</span>`;
@@ -171,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const commonFieldSelect = document.createElement("select");
         commonFieldSelect.className = "input-box flex-grow mr-2 max-w-[250px]";
         
-        // Populate dropdown with common fields
         const uniqueNormalizedFields = new Set(window.commonNormalizedFields.slice(1).map(f => f.normalized));
         commonFieldSelect.add(new Option(originalName, originalName));
         uniqueNormalizedFields.forEach(field => commonFieldSelect.add(new Option(field, field)));
@@ -182,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
         customNameInput.placeholder = "Enter custom field name";
         customNameInput.style.display = "none";
 
-        // Set initial value
         if ([...commonFieldSelect.options].some(opt => opt.value === customName)) {
             commonFieldSelect.value = customName;
         } else {
@@ -193,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const editIcon = document.createElement("span");
         editIcon.className = "edit-icon mr-2";
-        editIcon.innerHTML = "&#x1F58A;"; // Pen symbol
+        editIcon.innerHTML = "&#x1F58A;";
         editIcon.title = "Edit custom field name";
         editIcon.style.cursor = "pointer";
         
@@ -202,7 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
         removeBtn.className = "ml-2 btn-primary p-1 btn-remove";
         removeBtn.onclick = () => handleFieldSelectionToggle(originalName);
 
-        // Event handling for editing
         const commitChange = () => {
             const newValue = customNameInput.value.trim() || originalName;
             if (isFieldNameDuplicate(newValue, originalName)) {
@@ -238,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const newValue = e.target.value;
              if (isFieldNameDuplicate(newValue, originalName)) {
                  displayErrorMessage(elements.selectedFieldsError, `Field name "${newValue}" is already in use.`);
-                 e.target.value = customFieldMap.get(originalName); // Revert
+                 e.target.value = customFieldMap.get(originalName);
                  return;
             }
             hideErrorMessage(elements.selectedFieldsError);
@@ -251,19 +256,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // --- EVENT HANDLERS & LOGIC ---
     
+    const toggleSampleDataButtonVisibility = () => {
+        if (elements.logsTextarea.value.trim() === "") {
+            elements.sampleDataBtn.style.display = "inline-flex";
+        } else {
+            elements.sampleDataBtn.style.display = "none";
+        }
+    };
+
     const resetState = () => {
         globalFieldMap.clear();
         customFieldMap.clear();
         elements.logsTextarea.value = "";
+        elements.logSourceInput.value = "";
         elements.fieldListDiv.innerHTML = "";
         elements.selectedListDiv.innerHTML = "";
         elements.outputCode.textContent = "";
         elements.lineNumbersDiv.innerHTML = "";
         elements.selectAllCheckbox.checked = false;
+        
+        isAdvancedMode = false;
+        elements.generateDecoderBtn.textContent = 'Generate Decoder';
+        elements.generateAdvancedBtn.style.display = 'block';
+        elements.generateBasicBtn.style.display = 'none';
+        
+        elements.customPrematchInput.value = "";
+        elements.customPrematchContainer.style.display = "none";
+
         hideErrorMessage(elements.logsError);
         hideErrorMessage(elements.selectedFieldsError);
         hideErrorMessage(elements.generationError);
-        elements.sampleDataBtn.style.display = "inline-flex";
+        toggleSampleDataButtonVisibility(); 
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     };
 
     const isFieldNameDuplicate = (name, selfKey) => {
@@ -286,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchingCommonField = window.commonNormalizedFields.find(f => f.original === key);
             const initialName = matchingCommonField ? matchingCommonField.normalized : key;
             if(isFieldNameDuplicate(initialName, key)) {
-                displayErrorMessage(elements.selectedFieldsError, `Default name "${initialName}" conflicts with an existing selection. Please select and rename manually.`);
+                displayErrorMessage(elements.selectedFieldsError, `Default name "${initialName}" conflicts. Please select and rename manually.`);
                 return;
             }
             customFieldMap.set(key, initialName);
@@ -311,8 +338,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             elements.logsTextarea.value = "";
         }
-        elements.sampleDataBtn.style.display = "none";
+        elements.logsTextarea.dispatchEvent(new Event('input', { bubbles: true }));
     };
+
+    elements.logsTextarea.addEventListener('input', toggleSampleDataButtonVisibility);
+    elements.logsTextarea.addEventListener('paste', toggleSampleDataButtonVisibility);
 
     elements.parseLogsBtn.onclick = () => {
         const logs = elements.logsTextarea.value.trim();
@@ -329,23 +359,15 @@ document.addEventListener('DOMContentLoaded', function() {
         globalFieldMap.clear();
         customFieldMap.clear();
         
-        // No spinner for "Extract Fields" button as per user request
-        // showLoadingSpinner(true); 
-
-        // Delay parsing and rendering for smoother scroll, even without spinner
         setTimeout(() => {
             globalFieldMap = logType === 'CEF' ? extractCEFFields(logs) : extractLEEFFields(logs);
             
             renderExtractedFields();
             renderSelectedFields();
             elements.selectAllCheckbox.checked = false;
-            elements.sampleDataBtn.style.display = "inline-flex";
-            // No spinner for "Extract Fields" button as per user request
-            // showLoadingSpinner(false); 
-
-            // Scroll to the "Extracted Fields" and "Selected Fields" module
-            elements.fieldSelectionContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 500); // Small delay for a smoother scroll
+            
+            elements.parseLogsBtn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
     };
 
     elements.selectAllCheckbox.onchange = () => {
@@ -385,50 +407,111 @@ document.addEventListener('DOMContentLoaded', function() {
             typeOutDecoder(currentContent);
         }
     };
-
-    elements.generateDecoderBtn.onclick = () => {
+    
+    const triggerGeneration = (isAdvanced) => {
         hideErrorMessage(elements.generationError);
         const logSource = elements.logSourceInput.value.trim();
         const logType = elements.logTypeSelect.value;
+        const rawLogs = elements.logsTextarea.value;
 
         if (!logSource) return displayErrorMessage(elements.generationError, "Log Source Name is required.");
         if (/\s/.test(logSource)) return displayErrorMessage(elements.generationError, "Log Source Name cannot contain spaces.");
-        if (elements.logsTextarea.value.trim() === "") return displayErrorMessage(elements.generationError, "Logs are required.");
+        if (rawLogs.trim() === "") return displayErrorMessage(elements.generationError, "Logs are required.");
         if (customFieldMap.size === 0) return displayErrorMessage(elements.generationError, "Please select at least one field.");
 
-        showLoadingSpinner(true); // Show spinner in the "Extracted/Selected Fields" area
+        showLoadingSpinner(true);
         
-        // This setTimeout ensures the spinner is displayed for 2 seconds FIRST.
-        // The scrolling and decoder generation happen AFTER this delay.
         setTimeout(() => {
-            // Scroll to the "Extracted Fields" and "Selected Fields" module to show the Generate Decoder button and modules above it
-            elements.fieldSelectionContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            const generator = logType === 'CEF' ? generateCEFDecoder : generateLEEFDecoder;
-            const xmlOutput = generator(logSource, elements.logsTextarea.value, customFieldMap, globalFieldMap);
-            typeOutDecoder(xmlOutput);
-            showLoadingSpinner(false); // Hide spinner after content starts appearing
-        }, 2000); // 2-second delay
+            try {
+                let prematchToUse;
+                if (elements.customPrematchInput.value.trim() === "") {
+                    const prematchInferrer = logType === 'CEF' ? inferCEFPrematch : inferLEEFPrematch;
+                    prematchToUse = prematchInferrer(rawLogs);
+                    elements.customPrematchInput.value = prematchToUse;
+                } else {
+                    prematchToUse = elements.customPrematchInput.value;
+                }
+
+                elements.outputSectionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                
+                let generator;
+                if (isAdvanced) {
+                    generator = logType === 'CEF' ? generateAdvancedCEFDecoder : generateAdvancedLEEFDecoder;
+                } else {
+                    generator = logType === 'CEF' ? generateCEFDecoder : generateLEEFDecoder;
+                }
+
+                const xmlOutput = generator(logSource, prematchToUse, customFieldMap, globalFieldMap);
+                typeOutDecoder(xmlOutput);
+                elements.customPrematchContainer.style.display = 'flex';
+
+            } catch (error) {
+                console.error("Error during decoder generation:", error);
+                displayErrorMessage(elements.generationError, "An unexpected error occurred. See console for details.");
+            } finally {
+                showLoadingSpinner(false);
+            }
+        }, 2000);
+    };
+    
+    elements.generateDecoderBtn.onclick = () => {
+        triggerGeneration(isAdvancedMode);
     };
 
-    elements.copyOutputBtn.onclick = () => {
-        navigator.clipboard.writeText(elements.outputCode.textContent).then(() => {
-            // Show success message
-            elements.copySuccessMessage.style.display = 'block'; // Ensure display is block
-            elements.copySuccessMessage.classList.add("show");
-            setTimeout(() => {
-                elements.copySuccessMessage.classList.remove("show");
-                elements.copySuccessMessage.style.display = 'none'; // Hide after transition
-            }, 2000);
+    elements.generateAdvancedBtn.onclick = (e) => {
+        e.preventDefault();
+        isAdvancedMode = true;
+        elements.generateDecoderBtn.textContent = 'Generate Advanced Decoder';
+        elements.generateAdvancedBtn.style.display = 'none';
+        elements.generateBasicBtn.style.display = 'block';
+        elements.decoderTypeDropdown.style.display = 'none';
+        triggerGeneration(true);
+    };
+    
+    elements.generateBasicBtn.onclick = (e) => {
+        e.preventDefault();
+        isAdvancedMode = false;
+        elements.generateDecoderBtn.textContent = 'Generate Decoder';
+        elements.generateAdvancedBtn.style.display = 'block';
+        elements.generateBasicBtn.style.display = 'none';
+        elements.decoderTypeDropdown.style.display = 'none';
+        triggerGeneration(false);
+    };
+    
+    elements.decoderTypeToggle.onclick = (e) => {
+        e.stopPropagation();
+        const isVisible = elements.decoderTypeDropdown.style.display === 'block';
+        elements.decoderTypeDropdown.style.display = isVisible ? 'none' : 'block';
+    };
 
-            // Select the text in the output code block
+    window.addEventListener('click', () => {
+        if (elements.decoderTypeDropdown.style.display === 'block') {
+            elements.decoderTypeDropdown.style.display = 'none';
+        }
+    });
+
+    elements.copyOutputBtn.onclick = () => {
+        if (!elements.outputCode.textContent.trim()) return;
+
+        navigator.clipboard.writeText(elements.outputCode.textContent).then(() => {
+            const originalText = "Copy XML";
+            elements.copyOutputBtn.textContent = 'Copied!';
+            elements.copyOutputBtn.classList.add('btn-success');
+
+            // Select the text in the output box
             const range = document.createRange();
             range.selectNodeContents(elements.outputCode);
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
+
+            // Revert button state after 2 seconds
+            setTimeout(() => {
+                elements.copyOutputBtn.textContent = originalText;
+                elements.copyOutputBtn.classList.remove('btn-success');
+            }, 2000);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
-            // Optionally, you can add an error message here if copy fails
         });
     };
     
@@ -447,8 +530,11 @@ document.addEventListener('DOMContentLoaded', function() {
         URL.revokeObjectURL(a.href);
     };
 
+    elements.clearAllBtn.onclick = resetState;
+
     // --- INITIALIZATION ---
     const initialTheme = document.documentElement.getAttribute("data-theme") || "dark";
     elements.themeLabel.textContent = initialTheme.charAt(0).toUpperCase() + initialTheme.slice(1);
     elements.disableTypingEffectToggle.checked = !typingEffectEnabled;
+    toggleSampleDataButtonVisibility(); 
 });
