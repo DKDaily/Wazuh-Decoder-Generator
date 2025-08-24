@@ -14,90 +14,105 @@ function extractLEEFFields(rawLogs) {
         if (leefStart === -1) return;
 
         const leefContent = line.substring(leefStart + 5);
-        const parts = leefContent.split('|');
-        if (parts.length < 6) return;
+        const allSegments = leefContent.split('|');
 
-        const attributes = parts.slice(5).join('|');
-        const pairs = attributes.split(/(?<!\\)\t/g); // Split by unescaped tab
+        let extensionStartIndex = -1;
+        for (let i = 0; i < allSegments.length; i++) {
+            if (allSegments[i].includes('=')) {
+                extensionStartIndex = i;
+                break;
+            }
+        }
+
+        if (extensionStartIndex === -1) return;
+
+        let extension = allSegments.slice(extensionStartIndex).join('|');
+        extension = extension.replace(/\\t/g, '\t');
+        if (!extension.trim()) return;
+        
+        const pairs = extension.split(/(?<!\\)[\t^]/g);
 
         pairs.forEach(p => {
             const [key, ...valParts] = p.split("=");
             if (!key || !valParts.length) return;
-
-            let val = valParts.join("=").replace(/\\\|/g, '|').replace(/\\\t/g, '\t').replace(/\\\\/g, '\\').trim();
+            let val = valParts.join("=").replace(/\\\|/g, '|').replace(/\\\\/g, '\\').trim();
             const k = key.trim();
+            if (!k) return;
 
-            if (k) {
-                if (!extractedFields.has(k)) {
-                    extractedFields.set(k, new Set());
-                }
-                extractedFields.get(k).add(val);
+            if (!extractedFields.has(k)) {
+                extractedFields.set(k, new Set());
             }
+            extractedFields.get(k).add(val);
         });
     });
     return extractedFields;
 }
 
+
+/**
+ * Infers the prematch string by finding the longest common header from all raw LEEF logs.
+ * @param {string} rawLogs - The string containing one or more LEEF logs.
+ * @returns {string} - The inferred prematch string.
+ */
+function inferLEEFPrematch(rawLogs) {
+    const lines = rawLogs.split(/\n|\r/).filter(Boolean);
+    if (!lines.length) return "LEEF:2.0";
+
+    const coreMessages = lines.map(line => {
+        const leefIndex = line.indexOf("LEEF:");
+        return leefIndex !== -1 ? line.substring(leefIndex) : "";
+    }).filter(Boolean);
+
+    if (!coreMessages.length) return "LEEF:2.0";
+
+    let commonPrefix = "";
+    const firstLine = coreMessages[0];
+    for (let i = 0; i < firstLine.length; i++) {
+        const char = firstLine[i];
+        for (let j = 1; j < coreMessages.length; j++) {
+            if (i >= coreMessages[j].length || coreMessages[j][i] !== char) {
+                const lastPipe = commonPrefix.lastIndexOf('|');
+                return lastPipe !== -1 ? commonPrefix.substring(0, lastPipe + 1) : "LEEF:2.0";
+            }
+        }
+        commonPrefix += char;
+    }
+    
+    const lastPipe = commonPrefix.lastIndexOf('|');
+    return lastPipe !== -1 ? commonPrefix.substring(0, lastPipe + 1) : "LEEF:2.0";
+}
+
+
 /**
  * Generates the full Wazuh decoder XML string for LEEF logs.
  * @param {string} logSource - The sanitized name for the log source.
- * @param {string} rawLogs - The raw logs, used to determine the prematch string.
+ * @param {string} prematchString - The prematch string to use in the parent decoder.
  * @param {Map<string, string>} selectedFields - A map of selected fields { originalName: customName }.
  * @param {Map<string, Set<string>>} allExtractedFields - A map of all fields and their sample values.
  * @returns {string} - The generated XML decoder as a string.
  */
-function generateLEEFDecoder(logSource, rawLogs, selectedFields, allExtractedFields) {
+function generateLEEFDecoder(logSource, prematchString, selectedFields, allExtractedFields) {
     
-    // Helper function to escape special XML characters.
-    const escapeXml = (unsafe) => {
-        return unsafe.replace(/[<>&'"]/g, c => {
-            switch (c) {
-                case '<': return '&lt;';
-                case '>': return '&gt;';
-                case '&': return '&amp;';
-                case "'": return '&apos;';
-                case '"': return '&quot;';
-            }
-            return c;
-        });
-    };
-    
-    // Helper function to escape special Regex characters.
+    const escapeXml = (unsafe) => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;'}[c]));
     const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    // Helper function to infer a regex pattern based on field name and sample values.
     const inferRegex = (field, sampleValues) => {
         const lower = field.toLowerCase();
         const val = [...sampleValues].find(v => v !== "") || "";
-
-        if (field === "src" || field === "dst") return `((?:\\d{1,3}\\.){3}\\d{1,3})`;
-        if (field === "filePath") return `([\\w\\\\:\\/\\.\\-\\s\\(\\)]+)`;
-        if (lower.includes("url") || val.match(/^https?:\/\//)) return `(https?:\/\/[^\\s\\t]+)`;
+        if (field === "src" || field === "dst" || lower.includes("ipaddress")) return `((?:\\d{1,3}\\.){3}\\d{1,3})`;
+        if (lower.includes("path") || field === "filePath") return `([\\w\\\\:\\/\\.\\-\\s\\(\\)]+)`;
+        if (lower.includes("url") || val.match(/^https?:\/\//)) return `(https?:\/\/[^\\s\\t^]+)`;
         if (val.match(/^\d+$/)) return `(\\d+)`;
-        return `([^\\t]+)`; // Default: capture everything until the next tab
+        return `((?:[^\\\\\\t^]|\\\\[\\t^])+?)`; 
     };
     
-    // Determine prematch from the first log line.
-    let prematch = "LEEF:";
-    const firstLogLine = rawLogs.split(/\n|\r/).filter(Boolean)[0];
-    if (firstLogLine) {
-        const leefIndex = firstLogLine.indexOf("LEEF:");
-        if (leefIndex !== -1) {
-            const headerParts = firstLogLine.substring(leefIndex + 5).split('|');
-            if (headerParts.length >= 2) {
-                prematch = `LEEF:${escapeRegExp(headerParts[0])}\\|${escapeRegExp(headerParts[1])}`;
-            }
-        }
-    }
-
     let xml = `<decoder name="${logSource}">\n`;
-    xml += `  <prematch>${escapeXml(prematch)}</prematch>\n`;
+    xml += `  <prematch>${escapeXml(prematchString)}</prematch>\n`;
     xml += `</decoder>\n\n`;
 
     selectedFields.forEach((customName, originalName) => {
         const sampleValues = allExtractedFields.get(originalName) || new Set();
         const pattern = inferRegex(originalName, sampleValues);
-        const leefFieldRegex = `\\t${escapeRegExp(originalName)}=${pattern}`;
+        const leefFieldRegex = `(?:^|\\t|\\^)${escapeRegExp(originalName)}=${pattern}`;
 
         xml += `<decoder name="${logSource}-child">\n`;
         xml += `  <parent>${logSource}</parent>\n`;
@@ -105,6 +120,56 @@ function generateLEEFDecoder(logSource, rawLogs, selectedFields, allExtractedFie
         xml += `  <order>${escapeXml(customName)}</order>\n`;
         xml += `</decoder>\n\n`;
     });
+
+    return xml.trim();
+}
+
+/**
+ * Generates an advanced, single-child Wazuh decoder XML string for LEEF logs.
+ * @param {string} logSource - The sanitized name for the log source.
+ * @param {string} prematchString - The prematch string to use in the parent decoder.
+ * @param {Map<string, string>} selectedFields - A map of selected fields { originalName: customName }.
+ * @param {Map<string, Set<string>>} allExtractedFields - A map of all fields and their sample values.
+ * @returns {string} - The generated XML decoder as a string.
+ */
+function generateAdvancedLEEFDecoder(logSource, prematchString, selectedFields, allExtractedFields) {
+    const escapeXml = (unsafe) => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;'}[c]));
+    const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const inferRegex = (field, sampleValues) => {
+        const lower = field.toLowerCase();
+        const val = [...sampleValues].find(v => v !== "") || "";
+        if (field === "src" || field === "dst" || lower.includes("ipaddress")) return `((?:\\d{1,3}\\.){3}\\d{1,3})`;
+        if (lower.includes("path") || field === "filePath") return `([\\w\\\\:\\/\\.\\-\\s\\(\\)]+)`;
+        if (lower.includes("url") || val.match(/^https?:\/\//)) return `(https?:\/\/[^\\s\\t^]+)`;
+        if (val.match(/^\d+$/)) return `(\\d+)`;
+        return `((?:[^\\\\\\t^]|\\\\[\\t^])+?)`;
+    };
+
+    let xml = `<decoder name="${logSource}">\n`;
+    xml += `  <prematch>${escapeXml(prematchString)}</prematch>\n`;
+    xml += `</decoder>\n\n`;
+
+    const regexParts = [];
+    const orderParts = [];
+
+    // ** BUG FIX: Changed "selected" to "selectedFields" **
+    selectedFields.forEach((customName, originalName) => {
+        const sampleValues = allExtractedFields.get(originalName) || new Set();
+        const pattern = inferRegex(originalName, sampleValues);
+        regexParts.push(`${escapeRegExp(originalName)}=${pattern}`);
+        orderParts.push(escapeXml(customName));
+    });
+
+    if (regexParts.length > 0) {
+        const combinedRegex = regexParts.join('.*?'); 
+        const combinedOrder = orderParts.join(', ');
+
+        xml += `<decoder name="${logSource}-child">\n`;
+        xml += `  <parent>${logSource}</parent>\n`;
+        xml += `  <regex type="pcre2">.*?${combinedRegex}</regex>\n`;
+        xml += `  <order>${combinedOrder}</order>\n`;
+        xml += `</decoder>\n\n`;
+    }
 
     return xml.trim();
 }
