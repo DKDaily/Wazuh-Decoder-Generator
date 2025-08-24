@@ -16,8 +16,10 @@
     </div>
 
     <div class="max-w-7xl mx-auto p-6">
-        <h1 class="text-3xl primary-heading">Wazuh Decoder Generator (Beta)</h1>
-        <p class="text-center privacy-note">[Don't Worry We Don't Save Any Of Your Logs <span class="emoji-note">👍</span>]</p>
+        <h1 class="text-3xl primary-heading">Wazuh Decoder Generator</h1>
+        <p class="text-center privacy-note">[Don't Worry We Don't Save Any Of Your Logs <span class="emoji-note">👍</span>]
+            <span class="tooltip-icon" data-tooltip="All processing is done in your browser. Your logs are never sent to any server.">?</span>
+        </p>
 
         <div class="fields-container-box mt-6">
             <div class="grid grid-cols-1 md-grid-cols-2 gap-4 mb-6">
@@ -81,10 +83,19 @@
                     <input type="checkbox" id="selectAllCheckbox" class="mr-1">
                     <label for="selectAllCheckbox" class="whitespace-nowrap">Select All</label>
                 </div>
+
+                <div id="customPrematchContainer" style="display: none; align-items: center; gap: 0.5rem;">
+                    <label for="customPrematchInput" class="font-bold whitespace-nowrap">Custom Prematch:</label>
+                    <input type="text" id="customPrematchInput" class="input-box" placeholder="Auto-inferred..." style="min-width: 250px;">
+                </div>
                 <div class="flex flex-col items-end">
-                    <div class="relative flex items-center">
-                        <button id="generateDecoderBtn" class="btn-primary">Generate Decoder</button>
-                        <span class="tooltip-icon button-tooltip" data-tooltip="Creates the Wazuh decoder XML based on your log source name and selected/customized fields.">?</span>
+                    <div class="split-button-container">
+                        <button id="generateDecoderBtn" class="btn-primary split-button-main">Generate Decoder</button>
+                        <button id="decoderTypeToggle" class="btn-primary split-button-toggle">&#9662;</button>
+                        <div id="decoderTypeDropdown" class="dropdown-menu">
+                            <a href="#" id="generateAdvancedBtn" data-tooltip="Generates a single, optimized child decoder. Recommended for performance.">Advanced (Single-Child)</a>
+                            <a href="#" id="generateBasicBtn" data-tooltip="Generates a separate child decoder for each field." style="display: none;">Basic (Multi-Child)</a>
+                        </div>
                     </div>
                     <div id="generationError" class="error-message mt-1 text-right"></div>
                 </div>
@@ -92,26 +103,30 @@
         </div>
 
         <div class="fields-container-box mt-6">
-            <div class="section-header-box flex items-center justify-between">
-                <div class="section-title">Generated Decoder in XML:</div>
-                <div id="copySuccessMessage" class="success-message">Decoder Copied To Clipboard!</div> <!-- Removed style="display: none;" -->
-                <div class="flex items-center">
-                    <label for="disableTypingEffectToggle" class="mr-2 whitespace-nowrap">Disable Typing Effect</label>
-                    <label class="switch">
-                        <input type="checkbox" id="disableTypingEffectToggle">
-                        <span class="slider round"></span>
-                    </label>
+            <div class="section-header-box">
+                <div class="flex items-center justify-between">
+                    <div class="section-title">Generated Decoder in XML:</div>
+                    <div class="flex items-center">
+                        <label for="disableTypingEffectToggle" class="mr-4 whitespace-nowrap">Disable Typing Effect</label>
+                        <label class="switch">
+                            <input type="checkbox" id="disableTypingEffectToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="output-box" id="outputContainer">
                 <div class="line-numbers" id="lineNumbers"></div>
                 <code class="code-content" id="output"></code>
             </div>
-            <div class="flex justify-end gap-4 mt-2 relative">
-                <button id="downloadXMLBtn" class="btn-primary">Download XML</button>
-                <span class="tooltip-icon button-tooltip" data-tooltip="Downloads the generated decoder XML as a file, named after your log source and current timestamp.">?</span>
-                <button id="copyOutputBtn" class="btn-primary">Copy XML</button>
-                <span class="tooltip-icon button-tooltip" data-tooltip="Copies the generated decoder XML to your clipboard.">?</span>
+            <div class="flex justify-between items-center mt-2 relative">
+                <button id="clearAllBtn" class="btn-primary">Clear All</button>
+                <div class="flex gap-4">
+                    <button id="downloadXMLBtn" class="btn-primary">Download XML</button>
+                    <span class="tooltip-icon button-tooltip" data-tooltip="Downloads the generated decoder XML as a file, named after your log source and current timestamp.">?</span>
+                    <button id="copyOutputBtn" class="btn-primary">Copy XML</button>
+                    <span class="tooltip-icon button-tooltip" data-tooltip="Copies the generated decoder XML to your clipboard.">?</span>
+                </div>
             </div>
         </div>
     </div>
