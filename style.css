@@ -520,26 +520,37 @@ input[type="checkbox"]:checked::after {
 }
 .split-button-main { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 1px solid rgba(0, 0, 0, 0.2); }
 .split-button-toggle { border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 0.5rem; padding-right: 0.5rem; }
+
 .dropdown-menu {
-    display: none; position: absolute;
-    top: 100%; right: 0;
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
     background-color: var(--secondary-color);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 10; min-width: 180px; padding: 0.5rem 0;
+    z-index: 10;
+    width: max-content; /* <-- MODIFIED */
+    padding: 0.5rem 0;
 }
+
 [data-theme="dark"] .dropdown-menu {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
+
 .dropdown-menu a {
     color: var(--text-color);
     padding: 0.5rem 1rem;
     line-height: 1.5;
-    text-decoration: none; display: block;
-    text-align: left; position: relative;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    position: relative;
+    white-space: nowrap; /* <-- MODIFIED */
 }
+
 .dropdown-menu a:hover { background-color: var(--soft-gray); }
 .dropdown-menu a::after {
     content: attr(data-tooltip);
@@ -588,7 +599,6 @@ input[type="checkbox"]:checked::after {
 .fields-container-box .mb-6 > div .input-box:focus {
     box-shadow: none;
 }
-/* style.css */
 
 /* --- FIX for Dark Theme Dropdown Menu Readability --- */
 [data-theme="dark"] select option {
