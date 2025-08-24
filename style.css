@@ -133,7 +133,7 @@ select:focus {
 
 .textarea {
   resize: vertical;
-  height: 350px;
+  height: 330px;
 }
 
 .textarea-container {
@@ -315,8 +315,8 @@ select:focus {
   border: var(--input-border-width) solid var(--border-color);
   padding: 1rem;
   border-radius: 6px;
-  min-height: 300px;
-  max-height: 300px;
+  min-height: 400px;
+  max-height: 400px;
   overflow-y: auto;
   background-color: var(--bg-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -605,4 +605,5 @@ input[type="checkbox"]:checked::after {
     background-color: #0d1b2a; /* A solid, dark blue from your theme */
     color: #e5e7eb; /* The light text color from your theme */
 }
+
 
